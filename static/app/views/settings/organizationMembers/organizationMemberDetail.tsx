@@ -22,14 +22,14 @@ import {Panel, PanelBody, PanelHeader, PanelItem} from 'sentry/components/panels
 import Tooltip from 'sentry/components/tooltip';
 import {t, tct} from 'sentry/locale';
 import space from 'sentry/styles/space';
-import {Member, Organization, Team} from 'sentry/types';
+import {Member, Organization} from 'sentry/types';
 import isMemberDisabledFromLimit from 'sentry/utils/isMemberDisabledFromLimit';
 import recreateRoute from 'sentry/utils/recreateRoute';
 import Teams from 'sentry/utils/teams';
 import withOrganization from 'sentry/utils/withOrganization';
 import AsyncView from 'sentry/views/asyncView';
 import SettingsPageHeader from 'sentry/views/settings/components/settingsPageHeader';
-import TeamSelect from 'sentry/views/settings/components/teamSelect';
+import TeamSelectWithRole from 'sentry/views/settings/components/teamSelectWithRole';
 
 import OrganizationRoleSelect from './inviteMember/orgRoleSelect';
 
@@ -51,8 +51,8 @@ type Props = {
 
 type State = {
   member: Member | null;
-  roleList: Member['roles'];
-  selectedRole: Member['role'];
+  orgRole: Member['orgRole'];
+  teamRoles: Member['teamRoles'];
 } & AsyncView['state'];
 
 const DisabledMemberTooltip = HookOrDefault({
@@ -61,12 +61,17 @@ const DisabledMemberTooltip = HookOrDefault({
 });
 
 class OrganizationMemberDetail extends AsyncView<Props, State> {
+  get hasTeamRoles() {
+    const {organization} = this.props;
+    return organization.features.includes('team-roles');
+  }
+
   getDefaultState(): State {
     return {
       ...super.getDefaultState(),
-      roleList: [],
-      selectedRole: '',
       member: null,
+      orgRole: '',
+      teamRoles: [],
     };
   }
 
@@ -75,6 +80,13 @@ class OrganizationMemberDetail extends AsyncView<Props, State> {
     return [
       ['member', `/organizations/${organization.slug}/members/${params.memberId}/`],
     ];
+  }
+
+  onRequestSuccess({data, stateKey}: {data: Member; stateKey: string}) {
+    if (stateKey === 'member') {
+      const {orgRole, teamRoles} = data;
+      this.setState({orgRole, teamRoles});
+    }
   }
 
   redirectToMemberPage() {
@@ -90,6 +102,7 @@ class OrganizationMemberDetail extends AsyncView<Props, State> {
 
   handleSave = async () => {
     const {organization, params} = this.props;
+    const {orgRole, teamRoles} = this.state;
 
     addLoadingMessage(t('Saving...'));
     this.setState({busy: true});
@@ -98,7 +111,7 @@ class OrganizationMemberDetail extends AsyncView<Props, State> {
       await updateMember(this.api, {
         orgId: organization.slug,
         memberId: params.memberId,
-        data: this.state.member,
+        data: {orgRole, teamRoles},
       });
       addSuccessMessage(t('Saved'));
       this.redirectToMemberPage();
@@ -136,25 +149,6 @@ class OrganizationMemberDetail extends AsyncView<Props, State> {
     this.setState({busy: false});
   };
 
-  handleAddTeam = (team: Team) => {
-    const {member} = this.state;
-    if (!member!.teams.includes(team.slug)) {
-      member!.teams.push(team.slug);
-    }
-    this.setState({member});
-  };
-
-  handleRemoveTeam = (removedTeam: string) => {
-    const {member} = this.state;
-
-    this.setState({
-      member: {
-        ...member!,
-        teams: member!.teams.filter(slug => slug !== removedTeam),
-      },
-    });
-  };
-
   handle2faReset = async () => {
     const {organization, router} = this.props;
     const {user} = this.state.member!;
@@ -171,6 +165,39 @@ class OrganizationMemberDetail extends AsyncView<Props, State> {
       addErrorMessage(t('Error removing authenticators'));
       Sentry.captureException(err);
     }
+  };
+
+  onAddTeam = (teamSlug: string) => {
+    const teamRoles = [...this.state.teamRoles];
+    const i = teamRoles.findIndex(r => r.teamSlug === teamSlug);
+    if (i !== -1) {
+      return;
+    }
+
+    teamRoles.push({teamSlug, role: null});
+    this.setState({teamRoles});
+  };
+
+  onRemoveTeam = (teamSlug: string) => {
+    const teamRoles = this.state.teamRoles.filter(r => r.teamSlug !== teamSlug);
+    this.setState({teamRoles});
+  };
+
+  onChangeOrgRole = orgRole => this.setState({orgRole});
+
+  onChangeTeamRole = (teamSlug: string, role: string) => {
+    if (!this.hasTeamRoles) {
+      return;
+    }
+
+    const teamRoles = [...this.state.teamRoles];
+    const i = teamRoles.findIndex(r => r.teamSlug === teamSlug);
+    if (i === -1) {
+      return;
+    }
+
+    teamRoles[i] = {...teamRoles[i], role};
+    this.setState({teamRoles});
   };
 
   showResetButton = () => {
@@ -233,18 +260,16 @@ class OrganizationMemberDetail extends AsyncView<Props, State> {
 
   renderBody() {
     const {organization} = this.props;
-    const {member} = this.state;
-
+    const {member, orgRole, teamRoles} = this.state;
     if (!member) {
       return <NotFound />;
     }
 
-    const {access, features} = organization;
-    const inviteLink = member.invite_link;
+    const {access, features, orgRoleList} = organization;
     const canEdit = access.includes('org:write') && !this.memberDeactivated;
     const hasTeamRoles = features.includes('team-roles');
 
-    const {email, expired, pending} = member;
+    const {email, expired, invite_link: inviteLink, pending} = member;
     const canResend = !expired;
     const showAuth = !pending;
 
@@ -355,20 +380,21 @@ class OrganizationMemberDetail extends AsyncView<Props, State> {
           enforceAllowed={false}
           enforceRetired={hasTeamRoles}
           disabled={!canEdit}
-          roleList={member.roles}
-          roleSelected={member.role}
-          setSelected={slug => this.setState({member: {...member, role: slug}})}
+          roleList={orgRoleList}
+          roleSelected={orgRole}
+          setSelected={this.onChangeOrgRole}
         />
 
         <Teams slugs={member.teams}>
-          {({teams, initiallyLoaded}) => (
-            <TeamSelect
-              organization={organization}
-              selectedTeams={teams}
-              disabled={!canEdit}
-              onAddTeam={this.handleAddTeam}
-              onRemoveTeam={this.handleRemoveTeam}
+          {({initiallyLoaded}) => (
+            <TeamSelectWithRole
               loadingTeams={!initiallyLoaded}
+              disabled={!canEdit}
+              orgRole={orgRole}
+              teamRoles={teamRoles}
+              onAddTeam={this.onAddTeam}
+              onChangeRole={this.onChangeTeamRole}
+              onRemoveTeam={this.onRemoveTeam}
             />
           )}
         </Teams>
