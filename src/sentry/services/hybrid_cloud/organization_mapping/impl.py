@@ -64,7 +64,7 @@ class DatabaseBackedOrganizationMappingService(OrganizationMappingService):
         }
         return APIOrganizationMapping(**args)
 
-    def update_customer_id(self, organization_id: int, customer_id: str):
+    def update_customer_id(self, organization_id: int, customer_id: str) -> None:
         OrganizationMapping.objects.filter(organization_id=organization_id).update(
             customer_id=customer_id
         )
