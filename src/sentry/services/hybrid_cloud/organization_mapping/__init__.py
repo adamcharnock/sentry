@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from django.utils import timezone
 
@@ -17,8 +17,8 @@ class APIOrganizationMapping:
     slug: str = ""
     region_name: str = ""
     date_created: datetime = timezone.now()
-    verified = bool = False
-    customer_id = str = None
+    verified: bool = False
+    customer_id: str = None
 
 
 class OrganizationMappingService(InterfaceWithLifecycle):
@@ -47,6 +47,10 @@ class OrganizationMappingService(InterfaceWithLifecycle):
         pass
 
     def close(self) -> None:
+        pass
+
+    @abstractmethod
+    def get_mappings_by_organization_id(self, organization_id: int) -> List[APIOrganizationMapping]:
         pass
 
     @abstractmethod

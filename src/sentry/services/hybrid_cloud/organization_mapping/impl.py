@@ -1,5 +1,5 @@
 from dataclasses import fields
-from typing import Optional
+from typing import List, Optional
 
 from django.db import IntegrityError, transaction
 
@@ -64,7 +64,11 @@ class DatabaseBackedOrganizationMappingService(OrganizationMappingService):
         }
         return APIOrganizationMapping(**args)
 
-    def update_customer_id(self, organization_id: int, customer_id: str) -> None:
-        OrganizationMapping.objects.filter(organization_id=organization_id).update(
+    def get_mappings_by_organization_id(self, organization_id: int) -> List[APIOrganizationMapping]:
+        mappings = OrganizationMapping.objects.filter(organization_id=organization_id)
+        return [self.serialize_organization_mapping(mapping) for mapping in mappings]
+
+    def update_customer_id(self, organization_id: int, customer_id: str) -> int:
+        return OrganizationMapping.objects.filter(organization_id=organization_id).update(
             customer_id=customer_id
         )

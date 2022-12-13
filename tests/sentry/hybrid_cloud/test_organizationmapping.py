@@ -17,6 +17,9 @@ class OrganizationMappingTest(TestCase):
             "region_name": "us",
         }
         api_org_mapping = organization_mapping_service.create(**fields)
+        org_mapping = organization_mapping_service.get_mappings_by_organization_id(
+            self.organization.id
+        )[0]
 
         data = serialize(api_org_mapping, self.user)
         assert data["id"]
@@ -24,7 +27,7 @@ class OrganizationMappingTest(TestCase):
         assert data["verified"] is False
         assert data["slug"] == fields["slug"]
         assert data["regionName"] == fields["region_name"]
-        assert data["dateCreated"] == api_org_mapping.date_created
+        assert data["dateCreated"] == org_mapping.date_created
 
     def test_idempotency_key(self):
         data = {
@@ -42,6 +45,11 @@ class OrganizationMappingTest(TestCase):
                 "region_name": "de",
             }
         )
+
+        assert not organization_mapping_service.get_mappings_by_organization_id(
+            self.organization.id
+        )
+        assert organization_mapping_service.get_mappings_by_organization_id(next_organization_id)[0]
 
         data = serialize(api_org_mapping, self.user)
         assert data["id"]
@@ -77,6 +85,13 @@ class OrganizationMappingTest(TestCase):
         api_org_mapping = organization_mapping_service.create(**fields)
         assert api_org_mapping.customer_id is None
 
-        organization_mapping_service.update_customer_id(
-            organization_id=self.organization.id, customer_id="test"
+        assert (
+            organization_mapping_service.update_customer_id(
+                organization_id=self.organization.id, customer_id="test"
+            )
+            == 1
         )
+        org_mapping = organization_mapping_service.get_mappings_by_organization_id(
+            self.organization.id
+        )[0]
+        assert org_mapping.customer_id == "test"
