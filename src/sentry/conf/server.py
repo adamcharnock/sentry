@@ -1,7 +1,6 @@
 """
 These settings act as the default (base) settings for the Sentry-provided web-server
 """
-
 import os
 import os.path
 import platform
@@ -14,6 +13,7 @@ from typing import Any, Dict, Iterable, Mapping, Tuple
 from urllib.parse import urlparse
 
 import sentry
+from sentry.silo import SiloMode
 from sentry.types.region import Region
 from sentry.utils.celery import crontab_with_minute_jitter
 from sentry.utils.types import type_from_value
@@ -504,6 +504,13 @@ AUTH_PROVIDER_LABELS = {
     "visualstudio": "Visual Studio",
 }
 
+# Settings related to SiloMode
+SILO_MODE = os.environ.get("SENTRY_SILO_MODE", None)
+FAIL_ON_UNAVAILABLE_API_CALL = False
+SILO_MODE_UNSTABLE_TESTS = bool(os.environ.get("SENTRY_SILO_MODE_UNSTABLE_TESTS", False))
+
+DISALLOWED_CUSTOMER_DOMAINS = []
+
 import random
 
 
@@ -582,6 +589,7 @@ CELERY_IMPORTS = (
     "sentry.tasks.low_priority_symbolication",
     "sentry.tasks.merge",
     "sentry.tasks.options",
+    "sentry.tasks.organization_mapping",
     "sentry.tasks.ping",
     "sentry.tasks.post_process",
     "sentry.tasks.process_buffer",
@@ -688,6 +696,7 @@ CELERY_QUEUES = [
     Queue(
         "transactions.name_clusterer", routing_key="transactions.name_clusterer"
     ),  # TODO: add workers
+    Queue("hybrid_cloud.control_repair", routing_key="hybrid_cloud.control_repair"),
 ]
 
 for queue in CELERY_QUEUES:
@@ -822,6 +831,17 @@ CELERYBEAT_SCHEDULE = {
         "options": {"expires": 3600},
     },
 }
+
+if SILO_MODE is None or SILO_MODE in [SiloMode.MONOLITH, SiloMode.CONTROL]:
+    CELERYBEAT_SCHEDULE.update(
+        {
+            "hybrid-cloud-repair-organization-mappings": {
+                "task": "sentry.tasks.organization_mapping.repair_mappings",
+                "schedule": timedelta(hours=1),
+                "options": {"expires": 3600},
+            },
+        }
+    )
 
 BGTASKS = {
     "sentry.bgtasks.clean_dsymcache:clean_dsymcache": {"interval": 5 * 60, "roles": ["worker"]},
@@ -2865,13 +2885,6 @@ SENTRY_POSTGRES_INDEXER_RETRY_COUNT = 2
 SENTRY_FUNCTIONS_PROJECT_NAME = None
 
 SENTRY_FUNCTIONS_REGION = "us-central1"
-
-# Settings related to SiloMode
-SILO_MODE = os.environ.get("SENTRY_SILO_MODE", None)
-FAIL_ON_UNAVAILABLE_API_CALL = False
-SILO_MODE_UNSTABLE_TESTS = bool(os.environ.get("SENTRY_SILO_MODE_UNSTABLE_TESTS", False))
-
-DISALLOWED_CUSTOMER_DOMAINS = []
 
 SENTRY_PERFORMANCE_ISSUES_RATE_LIMITER_OPTIONS = {}
 SENTRY_PERFORMANCE_ISSUES_REDUCE_NOISE = False
