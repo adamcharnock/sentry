@@ -4,6 +4,12 @@ import {Event, Group, IssueCategory} from 'sentry/types';
 
 type EvidenceProps = {event: Event; group?: Group};
 
+/**
+ * This component is rendered whenever an `event.occurrence.evidenceDisplay` is present,
+ * _except_ for performance issues. Performance issues will render this info in `spanEvidence.tsx`.
+ *
+ * When we figure out how we want to genericize the UI for performance issues we can revisit.
+ */
 const Evidence = ({event, group}: EvidenceProps) => {
   const evidenceDisplay = event.occurrence?.evidenceDisplay;
 
