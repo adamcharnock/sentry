@@ -1,6 +1,5 @@
 import {initializeData} from 'sentry-test/performance/initializePerformanceData';
 import {
-  EXAMPLE_TRANSACTION_TITLE,
   MockSpan,
   ProblemSpan,
   TransactionEventBuilder,
@@ -74,6 +73,27 @@ describe('spanEvidence', () => {
 
     builder.addSpan(parentProblemSpan);
 
+    const event = builder.getEvent();
+    event.occurrence = {
+      evidenceData: {},
+      evidenceDisplay: [
+        {
+          name: 'Transaction',
+          value: '/api/0/transaction-test-endpoint/',
+          important: false,
+        },
+        {name: 'Parent Span', value: 'db - connect', important: false},
+        {name: 'Repeating Span', value: 'db - group me', important: false},
+      ],
+      fingerprint: [],
+      id: '',
+      issueTitle: '',
+      resourceId: '',
+      subtitle: '',
+      detectionTime: '',
+      eventId: '',
+    };
+
     render(
       <SpanEvidenceSection
         event={builder.getEvent()}
@@ -85,7 +105,9 @@ describe('spanEvidence', () => {
 
     // Verify the surfaced fields in the span evidence section are correct
     const transactionKey = screen.getByRole('cell', {name: 'Transaction'});
-    const transactionVal = screen.getByRole('cell', {name: EXAMPLE_TRANSACTION_TITLE});
+    const transactionVal = screen.getByRole('cell', {
+      name: '/api/0/transaction-test-endpoint/',
+    });
     expect(transactionKey).toBeInTheDocument();
     expect(transactionVal).toBeInTheDocument();
 

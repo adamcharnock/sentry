@@ -1,5 +1,6 @@
 import styled from '@emotion/styled';
 
+import KeyValueList from 'sentry/components/events/interfaces/keyValueList';
 import {t} from 'sentry/locale';
 import {EventTransaction, IssueType, Organization} from 'sentry/types';
 
@@ -8,7 +9,6 @@ import TraceView from '../spans/traceView';
 import {TraceContextType} from '../spans/types';
 import WaterfallModel from '../spans/waterfallModel';
 
-import {SpanEvidenceKeyValueList} from './spanEvidenceKeyValueList';
 import {getSpanInfoFromTransactionEvent} from './utils';
 
 interface Props {
@@ -37,18 +37,20 @@ export function SpanEvidenceSection({event, issueType, organization}: Props) {
     return null;
   }
 
-  const {parentSpan, offendingSpan, affectedSpanIds} = spanInfo;
+  const {affectedSpanIds} = spanInfo;
 
   return (
     <DataSection
       title={t('Span Evidence')}
       description={getEvidenceDescription(issueType)}
     >
-      <SpanEvidenceKeyValueList
-        issueType={issueType}
-        transactionName={event.title}
-        parentSpan={parentSpan}
-        offendingSpan={offendingSpan}
+      <KeyValueList
+        data={event.occurrence?.evidenceDisplay.map(item => ({
+          subject: item.name,
+          key: item.name,
+          value: item.value,
+        }))}
+        isSorted={false}
       />
 
       <TraceViewWrapper>

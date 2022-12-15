@@ -15,6 +15,7 @@ import EventCause from 'sentry/components/events/eventCause';
 import EventDataSection from 'sentry/components/events/eventDataSection';
 import EventExtraData from 'sentry/components/events/eventExtraData';
 import {EventSdk} from 'sentry/components/events/eventSdk';
+import Evidence from 'sentry/components/events/evidence';
 import EventGroupingInfo from 'sentry/components/events/groupingInfo';
 import {EventPackageData} from 'sentry/components/events/packageData';
 import RRWebIntegration from 'sentry/components/events/rrwebIntegration';
@@ -360,6 +361,7 @@ const EventEntries = ({
           onDeleteScreenshot={handleDeleteAttachment}
         />
       )}
+      <Evidence event={event} group={group} />
       <Entries
         definedEvent={event}
         projectSlug={projectSlug}

@@ -1,9 +1,9 @@
-import {Fragment, ReactChild} from 'react';
+import {ReactChild} from 'react';
 
 import ProjectsStore from 'sentry/stores/projectsStore';
 import {IssueCategory} from 'sentry/types';
 
-import {SpanEvidencePreview} from './spanEvidencePreview';
+import {EvidencePreview} from './evidencePreview';
 import {StackTracePreview} from './stackTracePreview';
 
 type GroupPreviewTooltipProps = {
@@ -39,18 +39,12 @@ const GroupPreviewTooltip = ({
           {children}
         </StackTracePreview>
       );
-    case IssueCategory.PERFORMANCE:
-      return (
-        <SpanEvidencePreview
-          groupId={groupId}
-          eventId={eventId}
-          projectSlug={projectSlug}
-        >
-          {children}
-        </SpanEvidencePreview>
-      );
     default:
-      return <Fragment>{children}</Fragment>;
+      return (
+        <EvidencePreview groupId={groupId} eventId={eventId} projectSlug={projectSlug}>
+          {children}
+        </EvidencePreview>
+      );
   }
 };
 

@@ -1,8 +1,7 @@
 import {Fragment, ReactChild, useEffect} from 'react';
 import styled from '@emotion/styled';
 
-import {SpanEvidenceKeyValueList} from 'sentry/components/events/interfaces/performance/spanEvidenceKeyValueList';
-import {getSpanInfoFromTransactionEvent} from 'sentry/components/events/interfaces/performance/utils';
+import KeyValueList from 'sentry/components/events/interfaces/keyValueList';
 import {GroupPreviewHovercard} from 'sentry/components/groupPreviewTooltip/groupPreviewHovercard';
 import {useDelayedLoadingState} from 'sentry/components/groupPreviewTooltip/utils';
 import LoadingIndicator from 'sentry/components/loadingIndicator';
@@ -81,29 +80,29 @@ const SpanEvidencePreviewBody = ({
     return <EmptyWrapper>{t('Failed to load preview')}</EmptyWrapper>;
   }
 
-  const spanInfo = data && getSpanInfoFromTransactionEvent(data);
+  const evidenceDisplay = data?.occurrence?.evidenceDisplay;
 
-  if (spanInfo && data) {
+  if (evidenceDisplay?.length) {
     return (
-      <SpanEvidencePreviewWrapper data-test-id="span-evidence-preview-body">
-        <SpanEvidenceKeyValueList
-          issueType={data?.perfProblem?.issueType}
-          transactionName={data.title}
-          parentSpan={spanInfo.parentSpan}
-          offendingSpan={spanInfo.offendingSpan}
+      <SpanEvidencePreviewWrapper data-test-id="evidence-preview-body">
+        <KeyValueList
+          data={evidenceDisplay.map(item => ({
+            key: item.name,
+            subject: item.name,
+            value: item.value,
+          }))}
+          isSorted={false}
         />
       </SpanEvidencePreviewWrapper>
     );
   }
 
   return (
-    <EmptyWrapper>
-      {t('There is no span evidence available for this issue.')}
-    </EmptyWrapper>
+    <EmptyWrapper>{t('There is no evidence available for this issue.')}</EmptyWrapper>
   );
 };
 
-export const SpanEvidencePreview = ({
+export const EvidencePreview = ({
   children,
   groupId,
   eventId,
