@@ -576,6 +576,7 @@ CELERY_IMPORTS = (
     "sentry.tasks.deletion",
     "sentry.tasks.deliver_from_outbox",
     "sentry.tasks.digests",
+    "sentry.tasks.dynamic_sampling",
     "sentry.tasks.email",
     "sentry.tasks.files",
     "sentry.tasks.groupowner",
@@ -819,6 +820,12 @@ CELERYBEAT_SCHEDULE = {
     "transaction-name-clusterer": {
         "task": "sentry.ingest.transaction_clusterer.tasks.spawn_clusterers",
         "schedule": timedelta(hours=1),
+        "options": {"expires": 3600},
+    },
+    "dynamic-sampling-project-biases": {
+        "task": "sentry.dynamic_sampling.tasks.prioritize_by_project",
+        "schedule": timedelta(hours=1),
+        # TODO: (andrii) adjust defaults
         "options": {"expires": 3600},
     },
 }
