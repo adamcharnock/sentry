@@ -31,6 +31,7 @@ function fieldDefinitionsToTagCollection(fieldKeys: string[]): TagCollection {
 }
 
 const REPLAY_TAGS = fieldDefinitionsToTagCollection(REPLAY_FIELDS);
+// TODO(replay): fetch list of tags in use by this org and merge into REPLAY_TAGS
 
 type Props = React.ComponentProps<typeof SmartSearchBar> & {
   organization: Organization;
@@ -50,7 +51,6 @@ function SearchBar(props: Props) {
       savedSearchType={SavedSearchType.REPLAY}
       maxMenuHeight={500}
       hasRecentSearches
-      highlightUnsupportedTags
       fieldDefinitionGetter={getReplayFieldDefinition}
     />
   );

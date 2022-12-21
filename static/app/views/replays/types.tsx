@@ -57,7 +57,7 @@ export type ReplayRecord = {
   };
   platform: string;
   projectId: string;
-  releases: null | string[];
+  releases: string[];
   sdk: {
     name: string;
     version: string;
@@ -67,7 +67,6 @@ export type ReplayRecord = {
    */
   startedAt: Date;
   tags: Record<string, string[]>;
-  title: string;
   traceIds: string[];
   urls: string[];
   user: {
@@ -77,7 +76,6 @@ export type ReplayRecord = {
     ip_address: null | string;
     name: null | string;
   };
-  userAgent: string;
 };
 
 export type ReplayListLocationQuery = {
