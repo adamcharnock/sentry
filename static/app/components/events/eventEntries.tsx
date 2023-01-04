@@ -465,10 +465,7 @@ function Entries({
     return null;
   }
 
-  if (
-    group?.issueCategory === IssueCategory.PERFORMANCE &&
-    organization.features?.includes('performance-issues')
-  ) {
+  if (group?.issueCategory === IssueCategory.PERFORMANCE) {
     injectResourcesEntry(definedEvent);
   }
 
