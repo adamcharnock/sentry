@@ -196,7 +196,7 @@ jobs:
               - added|modified: '**/*.py'
               - added|modified: 'requirements-*.txt'
 
-      - uses: getsentry/action-setup-venv@dc9adda2947a7807fe451a975bf92d593b51925e  # v1.0.1
+      - uses: getsentry/action-setup-venv@f1a26053b92bb38fc46d65e9aaaebe76b7cac359  # v1.0.2
         id: venv
         with:
           python-version: 3.8.13
@@ -423,7 +423,7 @@ jobs:
     steps:
       - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8  # v3.1.0
 
-      - uses: getsentry/action-setup-venv@dc9adda2947a7807fe451a975bf92d593b51925e  # v1.0.1
+      - uses: getsentry/action-setup-venv@f1a26053b92bb38fc46d65e9aaaebe76b7cac359  # v1.0.2
         id: venv
         with:
           python-version: 3.8.13
