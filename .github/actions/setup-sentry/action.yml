@@ -135,6 +135,15 @@ runs:
       run: |
         cd "$WORKDIR"
         pip install -r requirements-dev-frozen.txt
+
+    - name: Install sentry cli
+      shell: bash
+      env:
+        # This is necessary when other repositories (e.g. relay) want to take advantage of this workflow
+        # without needing to fork it. The path needed is the one where setup.py is located
+        WORKDIR: ${{ inputs.workdir }}
+      run: |
+        cd "$WORKDIR"
         # We need to install editable otherwise things like check migration will fail.
         SENTRY_LIGHT_BUILD=1 pip install --no-deps -e .
 
