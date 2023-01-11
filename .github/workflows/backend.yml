@@ -431,6 +431,7 @@ jobs:
 
       # We don't call setup-sentry, because we don't need devservices.
       - name: Setup backend typing
+        if: steps.venv.outputs.cache-hit != 'true'
         run: pip install -r requirements-dev-frozen.txt
 
       - name: Run backend typing (${{ steps.setup.outputs.matrix-instance-number }} of ${{ strategy.job-total }})
