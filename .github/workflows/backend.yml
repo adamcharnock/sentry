@@ -196,10 +196,10 @@ jobs:
               - added|modified: '**/*.py'
               - added|modified: 'requirements-*.txt'
 
-      - uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984  # v4.3.0
+      - uses: getsentry/action-setup-venv@dc9adda2947a7807fe451a975bf92d593b51925e  # v1.0.1
+        id: venv
         with:
           python-version: 3.8.13
-          cache: pip
           cache-dependency-path: |
             requirements-dev.txt
             requirements-dev-frozen.txt
@@ -209,14 +209,15 @@ jobs:
           path: ~/.cache/pre-commit
           key: cache-epoch-1|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
 
+      - run: pip install -r requirements-dev.txt -c requirements-dev-frozen.txt
+        if: steps.venv.outputs.cache-hit != 'true'
+
       - name: Setup pre-commit
         # We don't use make setup-git because we're only interested in installing
         # requirements-dev.txt as a fast path.
         # We don't need pre-commit install --install-hooks since we're just interested
         # in running the hooks.
-        run: |
-          pip install -r requirements-dev.txt -c requirements-dev-frozen.txt
-          pre-commit install-hooks
+        run: pre-commit install-hooks
 
       - name: Run pre-commit on changed files
         run: |
@@ -422,11 +423,10 @@ jobs:
     steps:
       - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8  # v3.1.0
 
-      - name: Setup Python
-        uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984  # v4.3.0
+      - uses: getsentry/action-setup-venv@dc9adda2947a7807fe451a975bf92d593b51925e  # v1.0.1
+        id: venv
         with:
           python-version: 3.8.13
-          cache: pip
           cache-dependency-path: requirements-dev-frozen.txt
 
       # We don't call setup-sentry, because we don't need devservices.

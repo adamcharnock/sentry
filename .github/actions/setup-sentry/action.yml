@@ -108,11 +108,10 @@ runs:
           echo "TOTAL_TEST_GROUPS=$MATRIX_INSTANCE_TOTAL" >> $GITHUB_ENV
         fi
 
-    - name: Setup python
-      uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984  # v4.3.0
+    - uses: getsentry/action-setup-venv@dc9adda2947a7807fe451a975bf92d593b51925e  # v1.0.1
+      id: venv
       with:
         python-version: ${{ inputs.python-version }}
-        cache: pip
         cache-dependency-path: ${{ inputs.workdir }}/requirements-dev-frozen.txt
 
     - name: Set up outputs
@@ -127,6 +126,7 @@ runs:
         echo "acceptance-dir=.artifacts/visual-snapshots/acceptance" >> "$GITHUB_OUTPUT"
 
     - name: Install python dependencies
+      if: steps.venv.outputs.cache-hit != 'true'
       shell: bash
       env:
         # This is necessary when other repositories (e.g. relay) want to take advantage of this workflow
