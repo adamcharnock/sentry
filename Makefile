@@ -132,7 +132,6 @@ test-python-ci:
 		--ignore tests/sentry/ingest/ingest_consumer/test_ingest_consumer_kafka.py \
 		--ignore tests/sentry/region_to_control/test_region_to_control_kafka.py \
 		--cov . --cov-report="xml:.artifacts/python.coverage.xml" \
-		--fail-slow=60s
 	@echo ""
 
 test-snuba:
